@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">RickandMortyApp</string>
+    <string name="empty_state_message">Oops! No characters found for this location!</string>
+    <string name="empty_state_description">Empty State Image</string>
+</resources>
