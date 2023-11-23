@@ -39,10 +39,7 @@ class MainActivity : AppCompatActivity() {
     if (savedInstanceState == null) {
        // Load data or initialize UI for the first time
         observeFirstCharacterLiveData()
-        Log.d("MainActivity","this should be ust one time !! ")
-
         mainVM.getLocations()
-
     }
         prepareLocationRecView()
         prepareCharacterRecView()
@@ -52,10 +49,12 @@ class MainActivity : AppCompatActivity() {
         onLocationClick()
         onCharacterClick()
 
-         recyclerViewListener()
+        recyclerViewListener()
 
     }
 
+
+    // The listener for keep track if user scrolled the recyView to end of the list
     private fun recyclerViewListener() {
         binding.recVLoc.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
@@ -70,13 +69,11 @@ class MainActivity : AppCompatActivity() {
 
                         mainVM.getLocations()
                         prepareLocationRecView()
-                        Log.d("MainActivity","Scroll position..."+ mainVM.observeLocationsLiveData().value!!.size+" yea "+(mainVM.observeCurrentPageLiveData().value!!-1)+ " carpım"+ mainVM.observeLocationsLiveData().value!!.size* (mainVM.observeCurrentPageLiveData().value!!-1) )
-                        Log.d("MainActivity","Scroll position..."+ mainVM.observeScrollPositionLiveData().value!!+ " carpım"+ mainVM.observeLocationsLiveData().value!!.size* (mainVM.observeCurrentPageLiveData().value!!-1))
 
                         binding.recVLoc.itemAnimator = null
                         binding.recVLoc.scrollToPosition((mainVM.observeScrollPositionLiveData().value!!)-1)
 
-                        // Start a new delayed task to hide the ProgressBar after 1.5 seconds
+                        // delay for progress bar
                     }, 1500)
 
                 }
@@ -106,7 +103,7 @@ class MainActivity : AppCompatActivity() {
         binding.recVLoc.apply {
             layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
             adapter=locationAdapter
-            Log.d("ThathooooIm","Yeapppp !! ")
+            Log.d("RecyclerLoc","Yeapppp !! ")
         }
     }
 
@@ -122,9 +119,7 @@ class MainActivity : AppCompatActivity() {
         mainVM.observeLocationsLiveData().observe(this
         ) { locList ->
             locList?.let {
-               // firstElementLocList=locList[0]
-                //locViewM.getCharactersByLocation(firstElementLocList.residents)
-                Log.d("ThatWattIm","Yeapppp !!"+locList.size)
+                Log.d("LocLiveData","Yeapppp !!"+locList.size)
 
                 locationAdapter.setList(it as ArrayList<Result>)
             }
@@ -135,7 +130,6 @@ class MainActivity : AppCompatActivity() {
         mainVM.observeCharactersLiveData().observe(this
         ) { chaList ->
             chaList?.let {
-                Log.d("aaaaaaaaaaaaaaaaaaaaaFIRST","Yeapppp !! "+ mainVM.observeFirstCharactersLiveData().value)
                 val arrayList: ArrayList<com.example.rickandmortyapp.pojo.character.Result> = ArrayList(chaList)
                 if (arrayList.isEmpty()){
                     binding.recVCha.visibility= View.GONE
@@ -157,7 +151,6 @@ class MainActivity : AppCompatActivity() {
     private fun observeFirstCharacterLiveData() {
         mainVM.observeFirstCharactersLiveData().observe(this
         ) { firstLocation ->
-            Log.d("aaaaaaaaaaaaaaaaaaaaa", "Yeapppp !! $firstLocation")
             mainVM.getCharactersByLocation(firstLocation)
         }
     }

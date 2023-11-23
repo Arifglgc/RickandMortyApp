@@ -18,9 +18,9 @@ class MainViewModel : ViewModel(){
     private var characterList =MutableLiveData<List<com.example.rickandmortyapp.pojo.character.Result>>()
     private var firstLocItemCharacter= MutableLiveData<List<String>> ()
     private var totalPages = MutableLiveData<Int>()
-    private var currentPage= MutableLiveData<Int>(1)
+    private var currentPage= MutableLiveData(1)
     private var scrollPosition= MutableLiveData<Int>()
-    private var selectedLocationButtonIndex= MutableLiveData<Int> (0)
+    private var selectedLocationButtonIndex= MutableLiveData(0)
 
     fun getLocations(){
          RetrofitClient.apiService.getLocations(currentPage.value!!).enqueue(object: Callback<Location>{
@@ -29,7 +29,8 @@ class MainViewModel : ViewModel(){
 
                      val newResults = response.body()!!.results
                      val currentList = locationList.value?.toMutableList() ?: mutableListOf()
-                     // Eğer sayfa numarası 1 ise, mevcut listeyi sıfırla
+
+                     // if current page is 1, make the list clear
                      if (currentPage.value == 1) {
                          firstLocItemCharacter.value=response.body()!!.results[0].residents
                          currentList.clear()
