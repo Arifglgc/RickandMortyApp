@@ -123,4 +123,9 @@ class MainViewModel : ViewModel(){
         return scrollPosition
     }
 
+    fun observeTotalPageLiveData(): LiveData<Int> {
+
+        return totalPages
+    }
+
 }

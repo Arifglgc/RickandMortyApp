@@ -8,6 +8,7 @@ import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.rickandmortyapp.adapters.CharacterAdapter
@@ -15,13 +16,17 @@ import com.example.rickandmortyapp.adapters.LocationAdapter
 import com.example.rickandmortyapp.databinding.ActivityMainBinding
 import com.example.rickandmortyapp.pojo.location.Result
 import com.example.rickandmortyapp.viewModels.MainViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var mainVM: MainViewModel
     private lateinit var locationAdapter: LocationAdapter
     private lateinit var characterAdapter: CharacterAdapter
-    private val progressBarHandler = Handler(Looper.getMainLooper())
+    private var loadJob: Job? = null
+    private var isLoading= false
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -48,7 +53,6 @@ class MainActivity : AppCompatActivity() {
         observeCharactersLiveData()
         onLocationClick()
         onCharacterClick()
-
         recyclerViewListener()
 
     }
@@ -59,23 +63,30 @@ class MainActivity : AppCompatActivity() {
         binding.recVLoc.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
                 super.onScrollStateChanged(recyclerView, newState)
-                if (!recyclerView.canScrollHorizontally(1) && newState == RecyclerView.SCROLL_STATE_IDLE && mainVM.observeCurrentPageLiveData().value!! <=7) {
+
+                val isWithinPageLimit= (mainVM.observeCurrentPageLiveData().value!! <= mainVM.observeTotalPageLiveData().value!!)
+
+                if (!recyclerView.canScrollHorizontally(1) && newState == RecyclerView.SCROLL_STATE_IDLE
+                    && isWithinPageLimit &&  loadJob == null) {
                     Log.d("MainActivity","The end of the scrool !! ")
                     showProgressBar(true)
-                    progressBarHandler.removeCallbacksAndMessages(null)
-                    progressBarHandler.postDelayed({
-                        // Fetch more data and update the RecyclerView
-                        showProgressBar(false)
+                    isLoading=true
 
-                        mainVM.getLocations()
-                        prepareLocationRecView()
-
-                        binding.recVLoc.itemAnimator = null
-                        binding.recVLoc.scrollToPosition((mainVM.observeScrollPositionLiveData().value!!)-1)
-
-                        // delay for progress bar
-                    }, 1500)
-
+                    loadJob= lifecycleScope.launch {
+                        try {
+                            delay(1000)
+                            // delay for progress bar
+                            mainVM.getLocations()
+                            prepareLocationRecView()
+                            binding.recVLoc.itemAnimator = null
+                            binding.recVLoc.scrollToPosition((mainVM.observeScrollPositionLiveData().value!!) - 1)
+                        }
+                        finally {
+                            showProgressBar(false)
+                            isLoading = false
+                            loadJob = null
+                        }
+                    }
                 }
             }
         })
@@ -103,7 +114,7 @@ class MainActivity : AppCompatActivity() {
         binding.recVLoc.apply {
             layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
             adapter=locationAdapter
-            Log.d("RecyclerLoc","Yeapppp !! ")
+            Log.d("RecyclerLoc","Yeapppp its done !! ")
         }
     }
 
@@ -119,7 +130,7 @@ class MainActivity : AppCompatActivity() {
         mainVM.observeLocationsLiveData().observe(this
         ) { locList ->
             locList?.let {
-                Log.d("LocLiveData","Yeapppp !!"+locList.size)
+                Log.d("LocLiveData","Yeapppp the list size is!!"+locList.size)
 
                 locationAdapter.setList(it as ArrayList<Result>)
             }
